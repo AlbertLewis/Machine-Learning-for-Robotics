@@ -27,7 +27,7 @@ class SGDLinearRegression:
            output_dim (int): Number of output dimensions
        """
        self.weights = np.zeros((input_dim, output_dim)) # shape (n_features, n_outputs)
-       self.bias = np.zeros((1, output_dim)) # predicted - true, shape (1, n_ouitputs)
+       self.bias = np.zeros((1, output_dim)) # predicted - true, shape (1, n_outputs)
        self.lr = 0.1 # Learning rate
 
        pass
@@ -42,7 +42,7 @@ class SGDLinearRegression:
        Returns:
            float: MSE loss value
        """
-       loss = self.lr*(y_true - y_pred)
+       loss = self.lr * (y_true - y_pred)
        return loss
        pass
        
@@ -58,11 +58,11 @@ class SGDLinearRegression:
            tuple: Weight gradients and bias gradients
        """
        bias_g = y_true - y_pred
-       weight_g = bias_g * X
+       weight_g = bias_g @ X
        return weight_g, bias_g
        pass
        
-   def fit(self, X, y, batch_size=32, epochs=100):
+   def fit(self, X, y, batch_size=32, epochs=1000):
        """Train model using mini-batch SGD.
        
        Args:
@@ -84,9 +84,8 @@ class SGDLinearRegression:
               weight_g_sum += weight_g
               bias_g_sum += bias_g
               
-            #   sum += self._compute_gradients(X[i], y[i], y_pred) + loss
-           self.weights += self.lr*weight_g_sum
-           self.bias += self.lr*bias_g_sum
+           self.weights += (self.lr * weight_g_sum) // batch_size
+           self.bias += (self.lr * bias_g_sum) // batch_size
        
        
    def predict(self, X):
