@@ -47,13 +47,11 @@ def compute_position_error(predictions, targets):
    Returns:
        float: Mean position error
    """
-   print(predictions.shape)
-   print(targets.shape)
    diff = (predictions[:3, :] - targets.T[:3, :])
 
    sum = 0
-   for col in diff:
-      sum += (col[0]**2 + col[1]**2 + col[2]**2)**0.5
+   for col in diff.T:
+    sum += (col[0]**2 + col[1]**2 + col[2]**2)**0.5
 
    return sum / diff.shape[1]
    
@@ -67,10 +65,10 @@ def compute_rotation_error(predictions, targets):
    Returns:
        float: Mean rotation error
    """
-   diff = (predictions[4:6, :] - targets.T[4:6, :])
+   diff = (predictions[3:, :] - targets.T[3:, :])
 
    sum = 0
-   for col in diff:
+   for col in diff.T:
       sum += (col[0]**2 + col[1]**2 + col[2]**2)**0.5
 
    return sum / diff.shape[1]

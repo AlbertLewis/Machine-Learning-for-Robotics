@@ -43,8 +43,6 @@ class AnalyticalLinearRegression:
            np.ndarray: Predicted values of shape (n_samples, n_outputs) 
        """
 
-       print(self.weights.shape)
-       print(X.shape)
        return self.weights @ X.T
 
 
