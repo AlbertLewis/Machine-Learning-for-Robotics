@@ -26,6 +26,10 @@ class SGDLinearRegression:
            input_dim (int): Number of input features
            output_dim (int): Number of output dimensions
        """
+       self.weights = np.zeros((input_dim, output_dim)) # shape (n_features, n_outputs)
+       self.bias = np.zeros((1, output_dim)) # predicted - true, shape (1, n_ouitputs)
+       self.lr = 0.1 # Learning rate
+
        pass
        
    def _compute_loss(self, y_pred, y_true):
@@ -38,6 +42,8 @@ class SGDLinearRegression:
        Returns:
            float: MSE loss value
        """
+       loss = self.lr*(y_true - y_pred)
+       return loss
        pass
        
    def _compute_gradients(self, X, y_true, y_pred):
@@ -51,18 +57,37 @@ class SGDLinearRegression:
        Returns:
            tuple: Weight gradients and bias gradients
        """
+       bias_g = y_true - y_pred
+       weight_g = bias_g * X
+       return weight_g, bias_g
        pass
        
    def fit(self, X, y, batch_size=32, epochs=100):
        """Train model using mini-batch SGD.
        
        Args:
-           X (np.ndarray): Training features of shape (n_samples, n_features)
+           X (np.ndarray): Training features of shape amples(n_s, n_features)
            y (np.ndarray): Target values of shape (n_samples, n_outputs)
            batch_size (int): Mini-batch size for SGD
            epochs (int): Number of training epochs
        """
-       pass
+       self._initialize_parameters(X.shape[1], y.shape[1])
+       for _ in range(epochs):
+           indices = np.random.randint(0, X.shape[0], size=batch_size)
+           weight_g_sum = 0
+           bias_g_sum = 0
+           for i in indices: 
+              y_pred = self.weights.T @ X[i] + self.bias
+              loss = self._compute_loss(y[i], y_pred)
+              weight_g, bias_g = self._compute_gradients(X[i], y[i], y_pred)
+
+              weight_g_sum += weight_g
+              bias_g_sum += bias_g
+              
+            #   sum += self._compute_gradients(X[i], y[i], y_pred) + loss
+           self.weights += self.lr*weight_g_sum
+           self.bias += self.lr*bias_g_sum
+       
        
    def predict(self, X):
        """Make predictions for given input features.
@@ -73,6 +98,7 @@ class SGDLinearRegression:
        Returns:
            np.ndarray: Predicted values of shape (n_samples, n_outputs)
        """
+       return self.weights @ X.T
        pass
 
 
@@ -81,7 +107,8 @@ if __name__ == "__main__":
 
     # Load data
     X_train, X_test, y_train, y_test = prepare_dataset(
-        "robot_kinematics_normalized_dataset.csv"
+        # "robot_kinematics_normalized_dataset.csv"
+        "ur10dataset.csv"
     )
 
     # Convert to numpy
@@ -91,7 +118,8 @@ if __name__ == "__main__":
     y_test = y_test.values
 
     # Train model
-    model = SGDLinearRegression(learning_rate=0.01)
+    # model = SGDLinearRegression(learning_rate=0.01)
+    model = SGDLinearRegression()
     model.fit(X_train, y_train, batch_size=32, epochs=100)
 
     # Evaluate
