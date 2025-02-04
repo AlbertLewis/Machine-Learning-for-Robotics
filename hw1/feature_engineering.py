@@ -1,4 +1,8 @@
-import numpy as np 
+import numpy as np
+from datasets import prepare_dataset
+from train_linear_regression import SGDLinearRegression
+from train_regression import AnalyticalLinearRegression
+from helpers.metrics import compute_mse, compute_position_error, compute_rotation_error
 
 def engineer_features(angles):
    """Engineer features for robot kinematics based on forward kinematics equations.
@@ -19,8 +23,26 @@ def engineer_features(angles):
        >>> print(features.shape)
        (1, 42)
    """
-   pass
+   n_samples = angles.shape[0]
+   engineered_features = np.zeros((n_samples, 42))
 
+   for i in range(6):
+      engineered_features[:, 2*i] = np.sin(angles[:, i]) # sine joint angles
+      engineered_features[:, 2*i+1] = np.cos(angles[:, i]) # cosine joint angles
+
+   # Interactions between joint angles, multiplying sin and cos
+   idx = 12 
+   for i in range(6):
+      for j in range(i+1, 6):
+         engineered_features[:, idx] = np.sin(angles[:, i]) * np.cos(angles[:, j])
+         idx += 1
+         engineered_features[:, idx] = np.cos(angles[:, i]) * np.sin(angles[:, j])
+         idx += 1
+
+   return engineered_features
+   
+    
+   
 if __name__ == "__main__":
    """
    Script to compare performance between raw angles vs engineered features:
@@ -29,4 +51,63 @@ if __name__ == "__main__":
    3. Train linear regression with engineered trigonometric features  
    4. Compare MSE, position error and rotation error metrics
    """
-   pass
+   
+   # Load data
+   X_train, X_test, y_train, y_test = prepare_dataset(
+       # "robot_kinematics_normalized_dataset.csv"
+       "ur10dataset.csv"
+   )
+
+   # Convert to numpy
+   X_train = X_train.values
+   y_train = y_train.values
+   X_test = X_test.values
+   y_test = y_test.values
+
+   X_train_features = engineer_features(X_train)
+   X_test_features = engineer_features(X_test)
+
+   print(f"Normal X_train: {X_train}")
+   print(f"Normal X_test: {X_test}\n")
+   print(f"Feature X_train: {X_train_features}")
+   print(f"Feature X_test: {X_test_features}")
+
+#    # Train model raw joint angles SGD
+#    model_raw = SGDLinearRegression()
+#    model_raw.fit(X_train, y_train, batch_size=32, epochs=100)
+#    y_pred_raw = model_raw.predict(X_test)
+
+#    # Train model engineered features joint angles SGD
+#    model_features = SGDLinearRegression()
+#    model_features.fit(X_train, y_train, batch_size=32, epochs=100)
+#    y_pred_features = model_raw.predict(X_test)
+
+   # Train model raw joint angles SGD
+   model_raw = AnalyticalLinearRegression()
+   model_raw.fit(X_train, y_train)
+   y_pred_raw = model_raw.predict(X_test)
+
+   # Train model engineered features joint angles SGD
+   model_features = AnalyticalLinearRegression()
+   model_features.fit(X_train, y_train)
+   y_pred_features = model_raw.predict(X_test)
+
+   # Evaluate raw model
+   mse_raw = compute_mse(y_pred_raw, y_test)
+   pos_error_raw = compute_position_error(y_pred_raw, y_test)
+   rot_error_raw = compute_rotation_error(y_pred_raw, y_test)
+
+   # Evaluate features model
+   mse_features = compute_mse(y_pred_features, y_test)
+   pos_error_features = compute_position_error(y_pred_features, y_test)
+   rot_error_feaures = compute_rotation_error(y_pred_features, y_test)
+
+   # Print model errors raw angles
+   print(f"Test Raw MSE: {mse_raw:.4f}")
+   print(f"Raw Position Error: {pos_error_raw:.4f}")
+   print(f"Raw Rotation Error: {rot_error_raw:.4f}\n")
+   
+   # Print model errors feature angles
+   print(f"Test Feature MSE: {mse_features:.4f}")
+   print(f"Position Feature Error: {pos_error_features:.4f}")
+   print(f"Rotation Feature Error: {rot_error_feaures:.4f}")
