@@ -28,7 +28,7 @@ class SGDLinearRegression:
        """
        self.weights = np.zeros((input_dim, output_dim)) # shape (n_features, n_outputs)
        self.bias = np.zeros((1, output_dim)) # predicted - true, shape (1, n_outputs)
-       self.lr = 0.1 # Learning rate
+       self.lr = 0.01 # Learning rate
 
        pass
        
@@ -74,6 +74,7 @@ class SGDLinearRegression:
        self._initialize_parameters(X.shape[1], y.shape[1])
        for _ in range(epochs):
            indices = np.random.randint(0, X.shape[0], size=batch_size)
+        #    print(indices)
            weight_g_sum = 0
            bias_g_sum = 0
            for i in indices: 
@@ -97,6 +98,8 @@ class SGDLinearRegression:
        Returns:
            np.ndarray: Predicted values of shape (n_samples, n_outputs)
        """
+    #    print(self.weights.shape)
+    #    print(X.shape)
        return self.weights @ X.T
        pass
 
@@ -123,6 +126,7 @@ if __name__ == "__main__":
 
     # Evaluate
     y_pred = model.predict(X_test)
+    print(y_pred.shape)
     mse = compute_mse(y_pred, y_test)
     pos_error = compute_position_error(y_pred, y_test)
     rot_error = compute_rotation_error(y_pred, y_test)
