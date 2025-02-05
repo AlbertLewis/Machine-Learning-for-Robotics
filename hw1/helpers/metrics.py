@@ -11,7 +11,7 @@ def compute_mse(predictions, targets):
        float: MSE value
    """
 
-   return ((targets.T - predictions)**2).mean()
+   return ((targets - predictions)**2).mean()
 
 def compute_rmse(predictions, targets): 
    """Compute Root Mean Squared Error between predictions and targets.
@@ -47,10 +47,10 @@ def compute_position_error(predictions, targets):
    Returns:
        float: Mean position error
    """
-   diff = (predictions[:3, :] - targets.T[:3, :])
+   diff = (predictions[:, :3] - targets[:, :3])
 
    sum = 0
-   for col in diff.T:
+   for col in diff:
     sum += (col[0]**2 + col[1]**2 + col[2]**2)**0.5
 
    return sum / diff.shape[1]
@@ -65,10 +65,10 @@ def compute_rotation_error(predictions, targets):
    Returns:
        float: Mean rotation error
    """
-   diff = (predictions[3:, :] - targets.T[3:, :])
+   diff = (predictions[:, 3:] - targets[:, 3:])
 
    sum = 0
-   for col in diff.T:
+   for col in diff:
       sum += (col[0]**2 + col[1]**2 + col[2]**2)**0.5
 
    return sum / diff.shape[1]

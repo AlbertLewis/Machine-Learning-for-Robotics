@@ -58,11 +58,18 @@ class SGDLinearRegression:
            tuple: Weight gradients and bias gradients
        """
        bias_g = y_true - y_pred
-       weight_g = bias_g @ X
+    #    print(f"bias shape: {bias_g.shape}")
+    #    print(bias_g)
+    #    print(f"X shape: {X.shape}")
+    #    print(X)
+       rows = X.shape[0]
+       X = X.reshape(rows, 1)
+       weight_g = X @ bias_g
+    #    print(f"weight_g: {weight_g}")
        return weight_g, bias_g
        pass
        
-   def fit(self, X, y, batch_size=32, epochs=1000):
+   def fit(self, X, y, batch_size=32, epochs=10000):
        """Train model using mini-batch SGD.
        
        Args:
@@ -85,8 +92,11 @@ class SGDLinearRegression:
               weight_g_sum += weight_g
               bias_g_sum += bias_g
               
-           self.weights += (self.lr * weight_g_sum) // batch_size
-           self.bias += (self.lr * bias_g_sum) // batch_size
+           self.weights += (self.lr * weight_g_sum) / batch_size
+        #    print(self.weights)
+           self.bias += (self.lr * bias_g_sum) / batch_size
+    #    print(self.weights)
+    #    print(self.bias)
        
        
    def predict(self, X):
@@ -98,9 +108,9 @@ class SGDLinearRegression:
        Returns:
            np.ndarray: Predicted values of shape (n_samples, n_outputs)
        """
-    #    print(self.weights.shape)
-    #    print(X.shape)
-       return self.weights @ X.T
+       print(f"shape weight: {self.weights.shape}")
+       print(f"shapeX: {X.shape}")
+       return X @ self.weights
        pass
 
 
@@ -120,13 +130,12 @@ if __name__ == "__main__":
     y_test = y_test.values
 
     # Train model
-    # model = SGDLinearRegression(learning_rate=0.01)
     model = SGDLinearRegression()
-    model.fit(X_train, y_train, batch_size=32, epochs=100)
+    model.fit(X_train, y_train, batch_size=32, epochs=10000)
 
     # Evaluate
     y_pred = model.predict(X_test)
-    print(y_pred.shape)
+    # print(y_pred.shape)
     mse = compute_mse(y_pred, y_test)
     pos_error = compute_position_error(y_pred, y_test)
     rot_error = compute_rotation_error(y_pred, y_test)

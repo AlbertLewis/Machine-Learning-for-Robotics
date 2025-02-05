@@ -39,6 +39,8 @@ def engineer_features(angles):
          engineered_features[:, idx] = np.cos(angles[:, i]) * np.sin(angles[:, j])
          idx += 1
 
+#    print(f"Engineered features: {engineered_features}")
+
    return engineered_features
    
     
@@ -67,30 +69,35 @@ if __name__ == "__main__":
    X_train_features = engineer_features(X_train)
    X_test_features = engineer_features(X_test)
 
-   print(f"Normal X_train: {X_train}")
-   print(f"Normal X_test: {X_test}\n")
-   print(f"Feature X_train: {X_train_features}")
-   print(f"Feature X_test: {X_test_features}")
+#    print(f"xtrain shape {X_train.shape}")
+#    print(f"xtest shape {X_test.shape}")
+#    print(f"xtrainfeat shape {X_train_features.shape}")
+#    print(f"xtestfeat shape {X_test_features.shape}")
 
-#    # Train model raw joint angles SGD
-#    model_raw = SGDLinearRegression()
-#    model_raw.fit(X_train, y_train, batch_size=32, epochs=100)
-#    y_pred_raw = model_raw.predict(X_test)
-
-#    # Train model engineered features joint angles SGD
-#    model_features = SGDLinearRegression()
-#    model_features.fit(X_train, y_train, batch_size=32, epochs=100)
-#    y_pred_features = model_raw.predict(X_test)
+#    print(f"Normal X_train: {X_train}")
+#    print(f"Normal X_test: {X_test}\n")
+#    print(f"Feature X_train: {X_train_features}")
+#    print(f"Feature X_test: {X_test_features}")
 
    # Train model raw joint angles SGD
-   model_raw = AnalyticalLinearRegression()
-   model_raw.fit(X_train, y_train)
+   model_raw = SGDLinearRegression()
+   model_raw.fit(X_train, y_train, batch_size=32, epochs=100)
    y_pred_raw = model_raw.predict(X_test)
 
    # Train model engineered features joint angles SGD
-   model_features = AnalyticalLinearRegression()
-   model_features.fit(X_train, y_train)
-   y_pred_features = model_raw.predict(X_test)
+   model_features = SGDLinearRegression()
+   model_features.fit(X_train_features, y_train, batch_size=32, epochs=100)
+   y_pred_features = model_features.predict(X_test_features)
+
+#    # Train model raw joint angles Analytical
+#    model_raw = AnalyticalLinearRegression()
+#    model_raw.fit(X_train, y_train)
+#    y_pred_raw = model_raw.predict(X_test)
+
+#    # Train model engineered features joint angles Analytical
+#    model_features = AnalyticalLinearRegression()
+#    model_features.fit(X_train_features, y_train)
+#    y_pred_features = model_features.predict(X_test_features)
 
    # Evaluate raw model
    mse_raw = compute_mse(y_pred_raw, y_test)
