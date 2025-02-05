@@ -23,7 +23,10 @@ def compute_rmse(predictions, targets):
    Returns:
        float: RMSE value
    """
-   pass
+   mse = compute_mse(predictions, targets)
+   
+   return np.sqrt(mse)   
+   
 
 def compute_mae(predictions, targets):
    """Compute Mean Absolute Error between predictions and targets.
@@ -35,7 +38,9 @@ def compute_mae(predictions, targets):
    Returns:
        float: MAE value
    """
-   pass
+
+   return np.abs(targets - predictions).mean()
+   
 
 def compute_position_error(predictions, targets):
    """Compute mean Euclidean error for position predictions (x,y,z).
