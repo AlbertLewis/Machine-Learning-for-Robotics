@@ -1,5 +1,5 @@
 import numpy as np
-from helpers.metrics import compute_mse, compute_position_error, compute_rotation_error
+from helpers.metrics import compute_mse, compute_rmse, compute_mae, compute_position_error, compute_rotation_error
 
 
 class AnalyticalLinearRegression:
@@ -43,12 +43,7 @@ class AnalyticalLinearRegression:
            np.ndarray: Predicted values of shape (n_samples, n_outputs) 
        """
 
-       print(f"shape weight: {self.weights.shape}")
-       print(f"shapeX: {X.shape}")       
-    #    self.weights = self.weights.reshape(X.shape[0], self.weights.shape[1])
-       print(f"shape return: {(X @ self.weights).shape}")
        return X @ self.weights
-    #    return self.weights @ X.T
 
 
 if __name__ == "__main__":
@@ -73,8 +68,12 @@ if __name__ == "__main__":
         # Evaluate
         y_pred = model.predict(X_test)
         mse = compute_mse(y_pred, y_test)
+        rmse = compute_rmse(y_pred, y_test)
+        mae = compute_mae(y_pred, y_test)
         pos_error = compute_position_error(y_pred, y_test)
         rot_error = compute_rotation_error(y_pred, y_test)
         print(f"Test MSE: {mse:.4f}")
+        print(f"Test RMSE: {rmse:.4f}")
+        print(f"Test MAE: {mae:.4f}")
         print(f"Position Error: {pos_error:.4f}")
         print(f"Rotation Error: {rot_error:.4f}")

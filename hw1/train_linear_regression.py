@@ -201,10 +201,14 @@ if __name__ == "__main__":
     # Evaluate
     y_pred = model.predict(X_test)
     mse = compute_mse(y_pred, y_test)
+    rmse = compute_rmse(y_pred, y_test)
+    mae = compute_mae(y_pred, y_test)
     pos_error = compute_position_error(y_pred, y_test)
     rot_error = compute_rotation_error(y_pred, y_test)
-
+    
     print(f"Test MSE: {mse:.4f}")
+    print(f"Test RMSE: {rmse:.4f}")
+    print(f"Test MAE: {mae:.4f}")
     print(f"Position Error: {pos_error:.4f}")
     print(f"Rotation Error: {rot_error:.4f}")
 
