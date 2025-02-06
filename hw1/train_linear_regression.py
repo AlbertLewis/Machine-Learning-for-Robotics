@@ -196,7 +196,7 @@ if __name__ == "__main__":
 
     # Train model
     model = SGDLinearRegression()
-    model.fit(X_train, y_train, batch_size=32, epochs=100)
+    model.fit(X_train, y_train, batch_size=32, epochs=1000)
 
     # Evaluate
     y_pred = model.predict(X_test)

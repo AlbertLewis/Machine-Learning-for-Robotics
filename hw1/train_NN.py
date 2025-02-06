@@ -4,8 +4,9 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader, TensorDataset
 from helpers.data_transforms import StandardScaler, convert_to_tensor
 from helpers.loss import CustomLoss
-from helpers.metrics import compute_mse, compute_position_error, compute_rotation_error
-
+from helpers.metrics import compute_mse, compute_position_error, compute_rotation_error, compute_rmse, compute_mae
+from feature_engineering import engineer_features
+import matplotlib.pyplot as plt
 
 class MLP(nn.Module):
    """Multi-Layer Perceptron for robot kinematics prediction.
@@ -20,7 +21,7 @@ class MLP(nn.Module):
        >>> output = model(input_tensor)
    """
 
-   def __init__(self, hidden_sizes=[10, 10], input_size=6, output_size=6):
+   def __init__(self, hidden_sizes=[10, 10], input_size=42, output_size=6):
     super().__init__()
     self.fc1 = nn.Linear(input_size, hidden_sizes[0])
     self.fc2 = nn.Linear(hidden_sizes[0], hidden_sizes[1])
@@ -44,7 +45,7 @@ class MLP(nn.Module):
        return x
 
 def train_nn(X_train, X_test, y_train, y_test, hidden_sizes=[128, 64],
-            lr=0.001, batch_size=32, epochs=100, device="cpu"):
+            lr=0.001, batch_size=32, epochs=100, device="cuda"):
    """Train neural network model for robot kinematics.
    
    Args:
@@ -63,16 +64,15 @@ def train_nn(X_train, X_test, y_train, y_test, hidden_sizes=[128, 64],
        >>> model, in_scaler, out_scaler = train_nn(X_train, X_test, y_train, y_test)
        >>> y_pred = model(X_test_tensor)
    """
-   model = MLP(hidden_sizes=hidden_sizes, input_size=6, output_size=6)
+
+
+   model = MLP(hidden_sizes=hidden_sizes, input_size=42, output_size=6)
    print(model)
 
    # Initialize scalers
    input_scaler = StandardScaler()
    output_scaler = StandardScaler()
-        # scaler = StandardScaler()
-        # scaler.fit(X_train)
-        # X_train_scaled = scaler.transform(X_train)
-        # X_test_scaled = scaler.transform(X_test)
+
    # Fit and transform input data
    input_scaler.fit(X_train)
    X_train_scaled = input_scaler.transform(X_train)
@@ -91,6 +91,7 @@ def train_nn(X_train, X_test, y_train, y_test, hidden_sizes=[128, 64],
    y_train_tensor = convert_to_tensor(y_train_scaled)
    y_test_tensor = convert_to_tensor(y_test_scaled)
 
+
    # Create DataLoader for mini-batch training
    dataset = TensorDataset(X_train_tensor, y_train_tensor)
    train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
@@ -99,6 +100,12 @@ def train_nn(X_train, X_test, y_train, y_test, hidden_sizes=[128, 64],
    criterion = CustomLoss(position_weight=1.0, rotation_weight=0.5) # use our custom MSE weighted loss
    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
    
+   mse_values = []
+   rmse_values = []
+   mae_values = []
+   pos_error_values = []
+   rot_error_values = []
+
    for i in range(epochs):
       for X_batch, y_batch in train_loader:
         optimizer.zero_grad()
@@ -108,10 +115,28 @@ def train_nn(X_train, X_test, y_train, y_test, hidden_sizes=[128, 64],
         loss.backward() # Back Propogation
         optimizer.step()       
 
+      # Normalize new test data before prediction
+      X_new = input_scaler.transform(X_train)  # Scale input
+      X_new_tensor = torch.tensor(X_new, dtype=torch.float32)
+
+      # Get predictions
+      y_pred_scaled = model(X_new_tensor)
+
+      # save training data 
+      y_train_numpy = y_train_tensor.detach().numpy()
+      y_pred_scaled_numpy = y_pred_scaled.detach().numpy()
+      mse_values.append(compute_mse(y_pred_scaled_numpy, y_train_numpy))
+      rmse_values.append(compute_rmse(y_pred_scaled_numpy, y_train_numpy))
+      mae_values.append(compute_mae(y_pred_scaled_numpy, y_train_numpy))
+      pos_error_values.append(compute_position_error(y_pred_scaled_numpy, y_train_numpy))
+      rot_error_values.append(compute_rotation_error(y_pred_scaled_numpy, y_train_numpy))
+
       # Print every 10 epochs
       if i % 10 == 0:
         print(f"Epoch: {i} and loss: {loss}")
-    
+
+   plot_errors(mse_values, rmse_values, mae_values, pos_error_values, rot_error_values, epochs)
+
 
    # Normalize new test data before prediction
    X_new = input_scaler.transform(X_test)  # Scale input
@@ -127,6 +152,55 @@ def train_nn(X_train, X_test, y_train, y_test, hidden_sizes=[128, 64],
     
    return model, input_scaler, output_scaler
 
+def plot_errors(mse_values, rmse_values, mae_values, pos_error_values, rot_error_values, epochs):
+    """Plot the errors (MSE, position, rotation) vs epochs."""
+    epochs_range = range(epochs)
+    
+    plt.figure(figsize=(10, 8))
+    
+    # Plot MSE
+    plt.subplot(3, 2, 1)
+    plt.plot(epochs_range, mse_values, label='MSE', color='blue')
+    plt.xlabel('Epochs')
+    plt.ylabel('MSE')
+    plt.title('Mean Squared Error vs Epochs')
+    plt.grid(True)
+
+    # Plot RMSE
+    plt.subplot(3, 2, 3)
+    plt.plot(epochs_range, rmse_values, label='Root Mean Squared Error', color='green')
+    plt.xlabel('Epochs')
+    plt.ylabel('Root Mean Squared Error')
+    plt.title('Root Mean Squared Error vs Epochs')
+    plt.grid(True)
+
+    # Plot MAE
+    plt.subplot(3, 2, 5)
+    plt.plot(epochs_range, mae_values, label='Mean Absolute Error', color='red')
+    plt.xlabel('Epochs')
+    plt.ylabel('Mean Absolute Error')
+    plt.title('Mean Absolute Error vs Epochs')
+    plt.grid(True)
+    
+    # Plot Position Error
+    plt.subplot(3, 2, 2)
+    plt.plot(epochs_range, pos_error_values, label='Position Error', color='orange')
+    plt.xlabel('Epochs')
+    plt.ylabel('Position Error')
+    plt.title('Position Error vs Epochs')
+    plt.grid(True)
+    
+    # Plot Rotation Error
+    plt.subplot(3, 2, 4)
+    plt.plot(epochs_range, rot_error_values, label='Rotation Error', color='purple')
+    plt.xlabel('Epochs')
+    plt.ylabel('Rotation Error')
+    plt.title('Rotation Error vs Epochs')
+    plt.grid(True)
+    
+
+    plt.tight_layout()
+    plt.show()
 
 if __name__ == "__main__":
     from datasets import prepare_dataset
@@ -136,13 +210,18 @@ if __name__ == "__main__":
         "ur10dataset.csv"
     )
 
+    X_train_features = engineer_features(X_train.values)
+    X_test_features = engineer_features(X_test.values)
+
     # Train model
     model, input_scaler, output_scaler = train_nn(
-        X_train.values,
-        X_test.values,
+        X_train_features,
+        X_test_features,
         y_train.values,
         y_test.values,
-        hidden_sizes=[128, 64],
+        hidden_sizes=[50, 100],
         lr=0.001,
         epochs=100,
     )
+
+    torch.save(model, "model.pth")

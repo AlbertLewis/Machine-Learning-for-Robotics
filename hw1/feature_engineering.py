@@ -81,12 +81,12 @@ if __name__ == "__main__":
 
    # Train model raw joint angles SGD
    model_raw = SGDLinearRegression()
-   model_raw.fit(X_train, y_train, batch_size=32, epochs=100)
+   model_raw.fit(X_train, y_train, batch_size=32, epochs=1000)
    y_pred_raw = model_raw.predict(X_test)
 
    # Train model engineered features joint angles SGD
    model_features = SGDLinearRegression()
-   model_features.fit(X_train_features, y_train, batch_size=32, epochs=100)
+   model_features.fit(X_train_features, y_train, batch_size=32, epochs=1000)
    y_pred_features = model_features.predict(X_test_features)
 
 #    # Train model raw joint angles Analytical
