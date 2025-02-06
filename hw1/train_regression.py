@@ -1,6 +1,6 @@
 import numpy as np
 from helpers.metrics import compute_mse, compute_rmse, compute_mae, compute_position_error, compute_rotation_error
-
+import torch
 
 class AnalyticalLinearRegression:
    """Linear regression using closed-form analytical solution.
@@ -77,3 +77,5 @@ if __name__ == "__main__":
         print(f"Test MAE: {mae:.4f}")
         print(f"Position Error: {pos_error:.4f}")
         print(f"Rotation Error: {rot_error:.4f}")
+
+    torch.save(torch.tensor(model.weights), "linear_regression_analytical.pth")

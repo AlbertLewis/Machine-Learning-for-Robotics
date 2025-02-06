@@ -1,6 +1,7 @@
 import numpy as np
 from helpers.metrics import compute_mse, compute_rmse, compute_mae, compute_position_error, compute_rotation_error
 import matplotlib.pyplot as plt
+import torch
 
 class SGDLinearRegression:
    """Linear regression implementation using stochastic gradient descent optimization.
@@ -196,7 +197,7 @@ if __name__ == "__main__":
 
     # Train model
     model = SGDLinearRegression()
-    model.fit(X_train, y_train, batch_size=32, epochs=1000)
+    model.fit(X_train, y_train, batch_size=32, epochs=100)
 
     # Evaluate
     y_pred = model.predict(X_test)
@@ -212,3 +213,4 @@ if __name__ == "__main__":
     print(f"Position Error: {pos_error:.4f}")
     print(f"Rotation Error: {rot_error:.4f}")
 
+    torch.save(torch.tensor(model.weights), "linear_regression.pth")

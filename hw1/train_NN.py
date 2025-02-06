@@ -224,4 +224,4 @@ if __name__ == "__main__":
         epochs=100,
     )
 
-    torch.save(model, "model.pth")
+    torch.save(model, "NN.pth")
